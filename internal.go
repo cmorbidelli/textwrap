@@ -22,13 +22,13 @@ type line struct {
 }
 
 func (l *line) push(chunk string) {
-    l.length += len(chunk)
+    l.length += len([]rune(chunk))
     l.chunks = append(l.chunks, chunk)
 }
 
 func (l *line) pop() {
     last := len(l.chunks) - 1
-    l.length -= len(l.chunks[last])
+    l.length -= len([]rune(l.chunks[last]))
     l.chunks = l.chunks[:last]
 }
 

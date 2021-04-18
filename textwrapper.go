@@ -113,38 +113,37 @@ func (t *TextWrapper) Wrap(text string) []string {
             indent = t.InitialIndent
         }
 
-        width := t.Width - len(indent)
+        width := t.Width - len([]rune(indent))
 
         curLine := line{}
         for ; i < len(chunks); i++ {
-            if curLine.length + len(chunks[i]) <= width {
+            if curLine.length + len([]rune(chunks[i])) < width {
                 curLine.push(chunks[i])
 						} else {
-                i--
+                //i--
                 break
             }
         }
 
-        if i < len(chunks) - 1 && len(chunks[i + 1]) > width {
+        if i + 1 < len(chunks) && len([]rune(chunks[i+1])) > width {
             i++
-            var spaceLeft int
-            if width < 1 {
-                spaceLeft = 1
-            } else {
-                spaceLeft = width - curLine.length
-            }
-
             if t.BreakLongWords {
-                curLine.push(chunks[i][:spaceLeft]) //this is looking for bytes, not runes
-                chunks[i] = chunks[i][spaceLeft:]
-            } else if len(curLine.chunks) == 0 {
+                c := []rune(chunks[i])
+                spaceLeft := 1
+                if width >= 1 {
+                    spaceLeft = width - curLine.length
+                }
+                curLine.push(string(c[:spaceLeft]))
+                chunks[i] = string(c[spaceLeft:])
+                i--
+            } else if curLine.length == 0 {
                 curLine.push(chunks[i])
             } else {
 							  i--
 						}
         }
 
-        if len(curLine.chunks) == 0 {
+        if curLine.length == 0 {
             continue
         }
 
@@ -160,7 +159,7 @@ func (t *TextWrapper) Wrap(text string) []string {
         } else {
             for j := len(curLine.chunks) - 1; j > 0; j-- {
                 if isSpace(curLine.chunks[j]) &&
-                   curLine.length + len(t.Placeholder) < width {
+                   curLine.length + len([]rune(t.Placeholder)) < width {
                     curLine.push(t.Placeholder)
                     lines = append(lines, indent + curLine.str())
                     break
@@ -170,7 +169,7 @@ func (t *TextWrapper) Wrap(text string) []string {
 
             if l := len(lines); l > 0 {
                 prevLine := rStrip(lines[l - 1]) + t.Placeholder
-                if len(prevLine) <= t.Width {
+                if len([]rune(prevLine)) <= t.Width {
                     lines[l - 1] = prevLine
                     break
                 }
