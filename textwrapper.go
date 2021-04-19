@@ -119,8 +119,8 @@ func (t *TextWrapper) Wrap(text string) []string {
         for ; i < len(chunks); i++ {
             if curLine.length + len([]rune(chunks[i])) < width {
                 curLine.push(chunks[i])
-						} else {
-                //i--
+            } else {
+                i--
                 break
             }
         }
@@ -139,8 +139,8 @@ func (t *TextWrapper) Wrap(text string) []string {
             } else if curLine.length == 0 {
                 curLine.push(chunks[i])
             } else {
-							  i--
-						}
+                i--
+            }
         }
 
         if curLine.length == 0 {

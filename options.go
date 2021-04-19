@@ -40,19 +40,19 @@ func InitialIndent(s string) option {
 
 func SubsequentIndent(s string) option {
     return func(t *TextWrapper) {
-		    t.SubsequentIndent = s
+        t.SubsequentIndent = s
     }
 }
 
 func FixSentenceEndings(b bool) option {
     return func(t *TextWrapper) {
-		    t.FixSentenceEndings = b
+        t.FixSentenceEndings = b
     }
 }
 
 func BreakLongWords(b bool) option {
     return func(t *TextWrapper) {
-		    t.BreakLongWords = b
+        t.BreakLongWords = b
     }
 }
 
@@ -64,7 +64,7 @@ func BreakOnHyphens(b bool) option {
 
 func MaxLines(i int) option {
     return func(t *TextWrapper) {
-		    t.MaxLines = i
+        t.MaxLines = i
     }
 }
 
