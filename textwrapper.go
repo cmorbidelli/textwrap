@@ -138,7 +138,7 @@ func NewTextWrapper(opts ...option) TextWrapper {
                                             "[^[:space:]]+-|" +
                                             "[^[:space:]]+|" +
                                             "[[:space:]]+)"),
-		    chunksNoHyphen:  regexp.MustCompile("(\u2014|" +
+        chunksNoHyphen:  regexp.MustCompile("(\u2014|" +
                                             "[^[:space:]]+|" +
                                             "[:space:]+)"),
     }
