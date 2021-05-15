@@ -63,7 +63,7 @@ type TextWrapper struct {
     SubsequentIndent   string
 
     // Attempts to place two spaces after the end of each sentence
-    // using the SentenceEnding regexp.  Unfortunately, the regexp
+    // using the sentenceEnding regexp.  Unfortunately, the regexp
     // can't currently distinguish punctuation within a sentence from
     // sentence endings, so (for instance) it will also match with
     // "Mr. Rogers".  Default is false.
@@ -86,23 +86,23 @@ type TextWrapper struct {
     // value is " [...]".
     Placeholder        string
 
-    // Whitespace matches any whitespace character.  It is only used
+    // whitespace matches any whitespace character.  It is only used
     // if ReplaceWhitespace is true.
     whitespace         *regexp.Regexp
 
-    // SentenceEnding matches any non-whitespace character,
+    // sentenceEnding matches any non-whitespace character,
     // followed by a sentence-ending punctuation mark, followed
     // by at least one space.  It is only used if FixSentenceEndings
     // is true.
     sentenceEnding     *regexp.Regexp
 
-    // ChunksHyphen matches sequences consisting of (1) a hyphen, (2)
+    // chunksHyphen matches sequences consisting of (1) a hyphen, (2)
     // non-space characters ending in a dash, (3) non-space
     // characters, or (4) whitespace.  It is used to split text into
     // chunks if BreakOnHyphens is true.
     chunksHyphen       *regexp.Regexp
 
-    // ChunksNoHyphen matches sequences consisting of (1) non-space
+    // chunksNoHyphen matches sequences consisting of (1) non-space
     // characters ending in a dash, (2) non-space characters, or (3)
     // whitespace.  It is used to split text into chunks if
     // BreakOnHyphens is false.
