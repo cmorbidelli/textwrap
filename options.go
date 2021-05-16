@@ -107,7 +107,7 @@ func MaxLines(i int) option {
 }
 
 // A call to Placeholder may be passed to NewTextWrapper or any
-// wrapping function to override the default placeholder ("[...]").
+// wrapping function to override the default placeholder (" [...]").
 func Placeholder(s string) option {
     return func(t *TextWrapper) {
         t.Placeholder = s

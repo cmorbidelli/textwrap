@@ -39,7 +39,7 @@ var (
                                         "[^[:space:]]+|[[:space:]]+)")
     // chunksNoHyphen is used if BreakOnHyphens is false
     chunksNoHyphen = regexp.MustCompile("(\u2014|[^[:space:]]+|" +
-                                        "[:space:]+)")
+                                        "[[:space:]]+)")
 )
 
 // functions to simplify stripping whitespace from chunks of text
