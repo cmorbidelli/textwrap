@@ -27,7 +27,7 @@ func Fill(text string, opts ...option) string {
 // sequences of whitespace with a single space, then returning the
 // first line of wrapped text.  While it accepts all of the same
 // options as NewTextWrapper, keep in mind that ExpandTabs, TabSize,
-// ReplaceWhitespace, DropWhitespace, and Maxlines have no effect.
+// ReplaceWhitespace, and Maxlines have no effect.
 func Shorten(text string, opts ...option) string {
     t := NewTextWrapper(opts...)
     t.MaxLines = 1

@@ -281,7 +281,9 @@ func (t *TextWrapper) Wrap(text string) []string {
 }
 
 // Fill wraps the text and returns a single string consisting of
-// the newline-separated lines.
+// the newline-separated lines.  The TextWrapper object contains
+// fields that can be modified to control Wrap's behavior.  See 
+// TextWrapper for descriptions of the fields.
 func (t *TextWrapper) Fill(text string) string {
     return strings.Join(t.Wrap(text), "\n")
 }
