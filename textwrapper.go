@@ -23,6 +23,26 @@ import (
     "strings"
 )
 
+// regular expressions used in wrapping functions
+var (
+    // whitespace matches any whitespace character.  It is used to
+    // replace characters with spaces if ReplaceWhitespace is true.
+    whitespace     = regexp.MustCompile("[\t\n\v\f\r]")
+    // sentenceEnding matches any non-whitespace character, followed
+    // by a sentence-ending punctuation mark and at least one space
+    // It is only used if FixSentenceEndings is true.
+    sentenceEnding = regexp.MustCompile("([^[:space:]]" +
+                                        "[.!?]['\"]?) [ ]*")
+    // chunksHyphen is used to break text into chunks for wrapping if
+    // BreakOnHyphens is true
+    chunksHyphen   = regexp.MustCompile("(\u2014|[^[:space:]]+-|" +
+                                        "[^[:space:]]+|[[:space:]]+)")
+    // chunksNoHyphen is used if BreakOnHyphens is false
+    chunksNoHyphen = regexp.MustCompile("(\u2014|[^[:space:]]+|" +
+                                        "[:space:]+)")
+)
+
+// functions to simplify stripping whitespace from chunks of text
 var strip = strings.TrimSpace
 
 func lStrip(s string) string {
@@ -85,28 +105,6 @@ type TextWrapper struct {
     // truncated, the last line will end with Placeholder.  Default
     // value is " [...]".
     Placeholder        string
-
-    // whitespace matches any whitespace character.  It is only used
-    // if ReplaceWhitespace is true.
-    whitespace         *regexp.Regexp
-
-    // sentenceEnding matches any non-whitespace character,
-    // followed by a sentence-ending punctuation mark, followed
-    // by at least one space.  It is only used if FixSentenceEndings
-    // is true.
-    sentenceEnding     *regexp.Regexp
-
-    // chunksHyphen matches sequences consisting of (1) a hyphen, (2)
-    // non-space characters ending in a dash, (3) non-space
-    // characters, or (4) whitespace.  It is used to split text into
-    // chunks if BreakOnHyphens is true.
-    chunksHyphen       *regexp.Regexp
-
-    // chunksNoHyphen matches sequences consisting of (1) non-space
-    // characters ending in a dash, (2) non-space characters, or (3)
-    // whitespace.  It is used to split text into chunks if
-    // BreakOnHyphens is false.
-    chunksNoHyphen     *regexp.Regexp
 }
 
 // NewTextWrapper returns a TextWrapper struct. Each field receives a
@@ -130,17 +128,6 @@ func NewTextWrapper(opts ...option) TextWrapper {
         BreakOnHyphens:     true,
         MaxLines:           0,
         Placeholder:        " [...]",
-
-        whitespace:      regexp.MustCompile("[\t\n\v\f\r]"),
-        sentenceEnding:  regexp.MustCompile("([^[:space:]]" +
-                                            "[.!?]['\"]?) [ ]*"),
-        chunksHyphen:    regexp.MustCompile("(\u2014|" +
-                                            "[^[:space:]]+-|" +
-                                            "[^[:space:]]+|" +
-                                            "[[:space:]]+)"),
-        chunksNoHyphen:  regexp.MustCompile("(\u2014|" +
-                                            "[^[:space:]]+|" +
-                                            "[:space:]+)"),
     }
 
     for _, opt := range opts {
@@ -189,20 +176,20 @@ func (t *TextWrapper) Wrap(text string) []string {
 
     // replaces whitespace if ReplaceWhitespace is true
     if t.ReplaceWhitespace {
-        text = t.whitespace.ReplaceAllString(text, " ")
+        text = whitespace.ReplaceAllString(text, " ")
     }
 
     // attempts to fix sentence endings if FixSentenceEndings is true
     if t.FixSentenceEndings {
-        text = t.sentenceEnding.ReplaceAllString(text, "${1}  ")
+        text = sentenceEnding.ReplaceAllString(text, "${1}  ")
     }
 
     // breaks text into chunks depending on BreakOnHyphens
     var chunks []string
     if t.BreakOnHyphens {
-        chunks = t.chunksHyphen.FindAllString(text, -1)
+        chunks = chunksHyphen.FindAllString(text, -1)
     } else {
-        chunks = t.chunksNoHyphen.FindAllString(text, -1)
+        chunks = chunksNoHyphen.FindAllString(text, -1)
     }
 
     // iterates through lines
