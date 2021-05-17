@@ -149,7 +149,7 @@ func (t *TextWrapper) Wrap(text string) []string {
 
     // (2) ExpandTabs is true and TabSize is less than zero; or
     } else if t.ExpandTabs && t.TabSize < 0 {
-        panic("Tab size must be at least 0 to expend tabs")
+        panic("Tab size must be at least 0 to expand tabs.")
     }
 
     // (3) MaxLines is positive, but the last line is not wide enough
@@ -161,7 +161,7 @@ func (t *TextWrapper) Wrap(text string) []string {
         }
 
         if len(indent) + len(lStrip(t.Placeholder)) > t.Width {
-            panic("Placeholder is too wide to fit on indented line")
+            panic("Placeholder is too wide to fit on indented line.")
         }
     }
     // If one of these conditions is met, Wrap panics instead  of
