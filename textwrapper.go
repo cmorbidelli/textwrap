@@ -23,34 +23,52 @@ import (
     "strings"
 )
 
-// regular expressions used in wrapping functions
+// The following variables define whitespace and regexps that are 
+// used throughout the package.  Although it is not recommended, they
+// can be set to change the functions' behaviors.  This may allow, 
+// for instance, textwrap to be adapted for different character sets.
 var (
-    // whitespace matches any whitespace character.  It is used to
-    // replace characters with spaces if ReplaceWhitespace is true.
-    whitespace     = regexp.MustCompile("[\t\n\v\f\r]")
-    // sentenceEnding matches any non-whitespace character, followed
+    Space            = " "
+    Tab              = "\t"
+    Newline          = "\n"
+    OtherWhitespace  = Tab + Newline + "\v\f\r"
+    Whitespace       = Space + OtherWhitespace
+
+    // Note: per the regexp package documentation, Regexp structs are
+    // safe for concurrent use by multiple goroutines.
+
+    // WhitespaceRe matches any whitespace character except Space.  
+    // It is used to replace characters with spaces if 
+    // ReplaceWhitespaceRe is true.
+    WhitespaceRe     = regexp.MustCompile("[" + OtherWhitespace + "]")
+    // SentenceEndingRe matches any non-whitespace character, followed
     // by a sentence-ending punctuation mark and at least one space
     // It is only used if FixSentenceEndings is true.
-    sentenceEnding = regexp.MustCompile("([^[:space:]]" +
-                                        "[.!?]['\"]?) [ ]*")
+    SentenceEndingRe = regexp.MustCompile("([^" + Whitespace + "]" +
+                                          "[.!?]['\"]?) [ ]*")
     // chunksHyphen is used to break text into chunks for wrapping if
     // BreakOnHyphens is true
-    chunksHyphen   = regexp.MustCompile("(\u2014|[^[:space:]]+-|" +
-                                        "[^[:space:]]+|[[:space:]]+)")
+    ChunksHyphenRe   = regexp.MustCompile("(\u2014|[^" + Whitespace + "]+-|" +
+                                          "[^" + Whitespace +
+                                          "]+|[" + Whitespace + "]+)")
     // chunksNoHyphen is used if BreakOnHyphens is false
-    chunksNoHyphen = regexp.MustCompile("(\u2014|[^[:space:]]+|" +
-                                        "[[:space:]]+)")
+    ChunksNoHyphenRe = regexp.MustCompile("(\u2014|[^" + Whitespace + "]+|" +
+                                          "[" + Whitespace + "]+)")
+    ConsWhitespaceRe = regexp.MustCompile("[" + Whitespace + "]+")
+    LeadWhitespaceRe = regexp.MustCompile("^[" + Whitespace + "]*")
 )
 
 // functions to simplify stripping whitespace from chunks of text
-var strip = strings.TrimSpace
+func strip(s string) string {
+    return strings.Trim(s, Whitespace)
+}
 
 func lStrip(s string) string {
-    return strings.TrimLeft(s, "\t\n\v\f\r ")
+    return strings.TrimLeft(s, Whitespace)
 }
 
 func rStrip(s string) string {
-    return strings.TrimRight(s, "\t\n\v\f\r ")
+    return strings.TrimRight(s, Whitespace)
 }
 
 // TextWrapper contains values that govern wrapping behavior.
@@ -170,26 +188,26 @@ func (t *TextWrapper) Wrap(text string) []string {
 
     // expands tabs if ExpandTabs is true
     if t.ExpandTabs {
-        tab := strings.Repeat(" ", t.TabSize)
-        text = strings.Replace(text, "\t", tab, -1)
+        tabString := strings.Repeat(Space, t.TabSize)
+        text = strings.Replace(text, Tab, tabString, -1)
     }
 
     // replaces whitespace if ReplaceWhitespace is true
     if t.ReplaceWhitespace {
-        text = whitespace.ReplaceAllString(text, " ")
+        text = WhitespaceRe.ReplaceAllString(text, Space)
     }
 
     // attempts to fix sentence endings if FixSentenceEndings is true
     if t.FixSentenceEndings {
-        text = sentenceEnding.ReplaceAllString(text, "${1}  ")
+        text = SentenceEndingRe.ReplaceAllString(text, "${1}" + Space + Space)
     }
 
     // breaks text into chunks depending on BreakOnHyphens
     var chunks []string
     if t.BreakOnHyphens {
-        chunks = chunksHyphen.FindAllString(text, -1)
+        chunks = ChunksHyphenRe.FindAllString(text, -1)
     } else {
-        chunks = chunksNoHyphen.FindAllString(text, -1)
+        chunks = ChunksNoHyphenRe.FindAllString(text, -1)
     }
 
     // iterates through lines
@@ -285,5 +303,5 @@ func (t *TextWrapper) Wrap(text string) []string {
 // fields that can be modified to control Wrap's behavior.  See 
 // TextWrapper for descriptions of the fields.
 func (t *TextWrapper) Fill(text string) string {
-    return strings.Join(t.Wrap(text), "\n")
+    return strings.Join(t.Wrap(text), Newline)
 }

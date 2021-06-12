@@ -1,9 +1,6 @@
 package textwrap
 
-import (
-    "regexp"
-    "strings"
-)
+import "strings"
 
 // Wrap is a convenience function corresponding to TextWrapper.Wrap.
 // It accepts all of the same options as a TextWrapper.  As each 
@@ -24,7 +21,7 @@ func Fill(text string, opts ...option) string {
 }
 
 // Shorten attempts to fit text onto a single line by replacing any
-// sequences of whitespace with a single space, then returning the
+// sequences of whitespace with a single Space, then returning the
 // first line of wrapped text.  While it accepts all of the same
 // options as NewTextWrapper, keep in mind that ExpandTabs, TabSize,
 // ReplaceWhitespace, and Maxlines have no effect.
@@ -32,8 +29,7 @@ func Shorten(text string, opts ...option) string {
     t := NewTextWrapper(opts...)
     t.MaxLines = 1
 
-    re := regexp.MustCompile("[[:space:]]+")
-    text = re.ReplaceAllString(text, " ")
+    text = ConsWhitespaceRe.ReplaceAllString(text, Space)
 
     return t.Fill(text)
 }
@@ -42,16 +38,15 @@ func Shorten(text string, opts ...option) string {
 // by all lines--from each line of text.  Lines consisting entirely
 // of whitespace are ignored.
 func Dedent(text string) string {
-    lines := strings.Split(text, "\n")
-    re := regexp.MustCompile("^[[:space:]]*")
-
+    lines := strings.Split(text, Newline)
     var indent string
+
     start := true
     for i, line := range lines {
         if strip(line) == "" {
             lines[i] = ""
         } else if start {
-            indent, start = re.FindString(line), false
+            indent, start = LeadWhitespaceRe.FindString(line), false
         } else if len(indent) != 0 {
             s, t := []rune(indent), []rune(line)
             var j int
@@ -67,14 +62,14 @@ func Dedent(text string) string {
         lines[i] = strings.TrimPrefix(lines[i], indent)
     }
 
-    return strings.Join(lines, "\n")
+    return strings.Join(lines, Newline)
 }
 
 // Indent prepends pref to lines within text.  Lines consisting only
 // of whitespace are ignored.  If pred is nil, each line is indented;
 // otherwise, only lines for which pred(line) == true are indented.
 func Indent(text, pref string, pred func(string) bool) string {
-    lines := strings.Split(text, "\n")
+    lines := strings.Split(text, Newline)
     for i, line := range lines {
         if strip(line) == "" {
             continue
@@ -85,5 +80,5 @@ func Indent(text, pref string, pred func(string) bool) string {
         }
     }
 
-    return strings.Join(lines, "\n")
+    return strings.Join(lines, Newline)
 }
