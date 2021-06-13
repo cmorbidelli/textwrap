@@ -46,15 +46,18 @@ var (
     // It is only used if FixSentenceEndings is true.
     SentenceEndingRe = regexp.MustCompile("([^" + Whitespace + "]" +
                                           "[.!?]['\"]?) [ ]*")
-    // chunksHyphen is used to break text into chunks for wrapping if
-    // BreakOnHyphens is true
+    // ChunksHyphenRe is used to break text into chunks for wrapping if
+    // BreakOnHyphens is true.
     ChunksHyphenRe   = regexp.MustCompile("(\u2014|[^" + Whitespace + "]+-|" +
                                           "[^" + Whitespace +
                                           "]+|[" + Whitespace + "]+)")
-    // chunksNoHyphen is used if BreakOnHyphens is false
+    // ChunksNoHyphenRe is used if BreakOnHyphens is false.
     ChunksNoHyphenRe = regexp.MustCompile("(\u2014|[^" + Whitespace + "]+|" +
                                           "[" + Whitespace + "]+)")
+    // ConsWhitespaceRe is used by Shorten to find consecutive
+    // whitespace characters.
     ConsWhitespaceRe = regexp.MustCompile("[" + Whitespace + "]+")
+    // LeadWhitespaceRe is used by Dedent to find leading whitespace.
     LeadWhitespaceRe = regexp.MustCompile("^[" + Whitespace + "]*")
 )
 
