@@ -43,7 +43,7 @@ func Dedent(text string) string {
 
 	start := true
 	for i, line := range lines {
-		if strip(line) == "" {
+		if Strip(line) == "" {
 			lines[i] = ""
 		} else if start {
 			indent, start = LeadWhitespaceRe.FindString(line), false
@@ -71,7 +71,7 @@ func Dedent(text string) string {
 func Indent(text, pref string, pred func(string) bool) string {
 	lines := strings.Split(text, Newline)
 	for i, line := range lines {
-		if strip(line) == "" {
+		if Strip(line) == "" {
 			continue
 		}
 

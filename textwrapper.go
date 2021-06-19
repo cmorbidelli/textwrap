@@ -24,9 +24,12 @@ import (
 )
 
 // The following variables define whitespace and regexps that are
-// used throughout the package.  Although it is not recommended, they
-// can be set to change the functions' behaviors.  This may allow,
-// for instance, textwrap to be adapted for different character sets.
+// used throughout the package.  Although it is not recommended,
+// other values can be substituted to change the functions' 
+// behaviors.  This may be useful, for instance, when dealing with
+// different character sets.  Note that, while Regexp structs are
+// safe for concurrent use by multiple goroutines, no effort has been
+// taken to make the other global variables concurrency-safe.
 var (
 	Space           = " "
 	Tab             = "\t"
@@ -34,12 +37,9 @@ var (
 	OtherWhitespace = Tab + Newline + "\v\f\r"
 	Whitespace      = Space + OtherWhitespace
 
-	// Note: per the regexp package documentation, Regexp structs are
-	// safe for concurrent use by multiple goroutines.
-
 	// WhitespaceRe matches any whitespace character except Space.
 	// It is used to replace characters with spaces if
-	// ReplaceWhitespaceRe is true.
+	// ReplaceWhitespace is true.
 	WhitespaceRe = regexp.MustCompile("[" + OtherWhitespace + "]")
 	// SentenceEndingRe matches any non-whitespace character, followed
 	// by a sentence-ending punctuation mark and at least one space
@@ -61,16 +61,16 @@ var (
 	LeadWhitespaceRe = regexp.MustCompile("^[" + Whitespace + "]*")
 )
 
-// functions to simplify stripping whitespace from chunks of text
-func strip(s string) string {
+// bonus functions to simplify stripping whitespace from chunks of text
+func Strip(s string) string {
 	return strings.Trim(s, Whitespace)
 }
 
-func lStrip(s string) string {
+func Lstrip(s string) string {
 	return strings.TrimLeft(s, Whitespace)
 }
 
-func rStrip(s string) string {
+func Rstrip(s string) string {
 	return strings.TrimRight(s, Whitespace)
 }
 
@@ -181,13 +181,13 @@ func (t *TextWrapper) Wrap(text string) []string {
 			indent = t.InitialIndent
 		}
 
-		if len(indent)+len(lStrip(t.Placeholder)) > t.Width {
+		if len(indent)+len(Lstrip(t.Placeholder)) > t.Width {
 			panic("Placeholder is too wide to fit on indented line.")
 		}
 	}
 	// If one of these conditions is met, Wrap panics instead  of
 	// restoring the default values because it is difficult to infer
-	// the user's intent, and more likely that a mistake occured.
+	// the user's intent and simpler to assume that a mistake occured.
 
 	// expands tabs if ExpandTabs is true
 	if t.ExpandTabs {
@@ -217,7 +217,7 @@ func (t *TextWrapper) Wrap(text string) []string {
 	var lines []string
 	for i := 0; i < len(chunks); i++ {
 		// drops leading whitespace if DropWhitespace is true
-		if len(lines) > 0 && t.DropWhitespace && strip(chunks[i]) == "" {
+		if len(lines) > 0 && t.DropWhitespace && Strip(chunks[i]) == "" {
 			i++
 		}
 
@@ -273,7 +273,7 @@ func (t *TextWrapper) Wrap(text string) []string {
 
 		// if DropWhitespace is true, drops any trailing whitespace
 		if last := len(curLine) - 1; t.DropWhitespace &&
-			curLen > 0 && strip(curLine[last]) == "" {
+			curLen > 0 && Strip(curLine[last]) == "" {
 			curLen -= len([]rune(curLine[last]))
 			curLine = curLine[:last]
 		}
@@ -285,7 +285,7 @@ func (t *TextWrapper) Wrap(text string) []string {
 			// if the line is empty, removes any leading whitespace
 			// from the placeholder
 			if curLen == 0 {
-				curLine = append(curLine, lStrip(t.Placeholder))
+				curLine = append(curLine, Lstrip(t.Placeholder))
 			} else {
 				curLine = append(curLine, t.Placeholder)
 			}
