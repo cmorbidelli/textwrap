@@ -25,11 +25,16 @@ import (
 
 // The following variables define whitespace and regexps that are
 // used throughout the package.  Although it is not recommended,
-// other values can be substituted to change the functions' 
+// other values can be substituted to change the functions'
 // behaviors.  This may be useful, for instance, when dealing with
 // different character sets.  Note that, while Regexp structs are
 // safe for concurrent use by multiple goroutines, no effort has been
 // taken to make the other global variables concurrency-safe.
+// These variables have been exported in an effort to make textwrap
+// more generally useful, but I have not verified that any of the
+// functions will make sense in the context of non-Latin character
+// sets. Anyone wishing to modify the global variables should do so
+// carefully and verify that they produce the desired results.
 var (
 	Space           = " "
 	Tab             = "\t"
