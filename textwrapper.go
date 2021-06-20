@@ -7,77 +7,26 @@
 // package exports the TextWrapper struct and its methods.
 //
 // A TextWrapper is initiated with default values, so functions that
-// use a TextWrapper also accept optional arguments to override the
-// defaults.  For example:
+// use a TextWrapper also accept optional arguments to override some
+// of the defaults.  For example:
 //
 //     Wrap("The quick brown fox jumped over the lazy jog",
-//          Width(10), ExpandTabs(false))
+//       Width(10), ExpandTabs(false))
 //
 // will wrap the text to a line width of 10 without expanding tabs,
 // but will otherwise use the default behavior for a TextWrapper.
-// One "option" corresponds to each of TextWrapper's exported fields.
+//
+// A Textwrapper also contains values defining whitespace and regular
+// expressions used in the wrapping functions.  These fields are
+// exported to allow users to customize the functions for non-Latin
+// character sets.  No options are provided for them because I cannot
+// guarantee that any changes will produce results that make sense.
 package textwrap
 
 import (
 	"regexp"
 	"strings"
 )
-
-// The following variables define whitespace and regexps that are
-// used throughout the package.  Although it is not recommended,
-// other values can be substituted to change the functions'
-// behaviors.  This may be useful, for instance, when dealing with
-// different character sets.  Note that, while Regexp structs are
-// safe for concurrent use by multiple goroutines, no effort has been
-// taken to make the other global variables concurrency-safe.
-// These variables have been exported in an effort to make textwrap
-// more generally useful, but I have not verified that any of the
-// functions will make sense in the context of non-Latin character
-// sets. Anyone wishing to modify the global variables should do so
-// carefully and verify that they produce the desired results.
-var (
-	Space           = " "
-	Tab             = "\t"
-	Newline         = "\n"
-	OtherWhitespace = Tab + Newline + "\v\f\r"
-	Whitespace      = Space + OtherWhitespace
-
-	// WhitespaceRe matches any whitespace character except Space.
-	// It is used to replace characters with spaces if
-	// ReplaceWhitespace is true.
-	WhitespaceRe = regexp.MustCompile("[" + OtherWhitespace + "]")
-	// SentenceEndingRe matches any non-whitespace character, followed
-	// by a sentence-ending punctuation mark and at least one space
-	// It is only used if FixSentenceEndings is true.
-	SentenceEndingRe = regexp.MustCompile("([^" + Whitespace + "]" +
-		"[.!?]['\"]?) [ ]*")
-	// ChunksHyphenRe is used to break text into chunks for wrapping if
-	// BreakOnHyphens is true.
-	ChunksHyphenRe = regexp.MustCompile("(\u2014|[^" + Whitespace + "]+-|" +
-		"[^" + Whitespace +
-		"]+|[" + Whitespace + "]+)")
-	// ChunksNoHyphenRe is used if BreakOnHyphens is false.
-	ChunksNoHyphenRe = regexp.MustCompile("(\u2014|[^" + Whitespace + "]+|" +
-		"[" + Whitespace + "]+)")
-	// ConsWhitespaceRe is used by Shorten to find consecutive
-	// whitespace characters.
-	ConsWhitespaceRe = regexp.MustCompile("[" + Whitespace + "]+")
-	// LeadWhitespaceRe is used by Dedent to find leading whitespace.
-	LeadWhitespaceRe = regexp.MustCompile("^[" + Whitespace + "]*")
-)
-
-// bonus functions to simplify stripping whitespace from chunks of text
-func Strip(s string) string {
-	return strings.Trim(s, Whitespace)
-}
-
-func Lstrip(s string) string {
-	return strings.TrimLeft(s, Whitespace)
-}
-
-func Rstrip(s string) string {
-	return strings.TrimRight(s, Whitespace)
-}
 
 // TextWrapper contains values that govern wrapping behavior.
 type TextWrapper struct {
@@ -131,6 +80,33 @@ type TextWrapper struct {
 	// truncated, the last line will end with Placeholder.  Default
 	// value is " [...]".
 	Placeholder string
+
+	// These values define whitespace used in the wrapping functions.
+	// While they can theoretically be modified to, for instance, adapt
+	// the TexWrapper to a non-Latin character set, I have not tested
+	// any other character sets.  Modify at your own peril.
+	Space           string
+	Tab             string
+	Newline         string
+	OtherWhitespace string
+	Whitespace      string
+
+	// WhitespaceRe matches any whitespace character except Space.
+	// It is used to replace characters with spaces if
+	// ReplaceWhitespace is true.
+	WhitespaceRe *regexp.Regexp
+	// SentenceEndingRe matches any non-whitespace character, followed
+	// by a sentence-ending punctuation mark and at least one space
+	// It is only used if FixSentenceEndings is true.
+	SentenceEndingRe *regexp.Regexp
+	// ChunksHyphenRe is used to break text into chunks for wrapping if
+	// BreakOnHyphens is true.
+	ChunksHyphenRe *regexp.Regexp
+	// ChunksNoHyphenRe is used if BreakOnHyphens is false.
+	ChunksNoHyphenRe *regexp.Regexp
+	// ConsWhitespaceRe is used by Shorten to replace consecutive
+	// whitespace characters with a single space
+	ConsWhitespaceRe *regexp.Regexp
 }
 
 // NewTextWrapper returns a TextWrapper struct. Each field receives a
@@ -160,7 +136,30 @@ func NewTextWrapper(opts ...option) TextWrapper {
 		opt(&t)
 	}
 
+	t.Space = " "
+	t.Tab = "\t"
+	t.Newline = "\n"
+	t.OtherWhitespace = t.Tab + t.Newline + "\v\f\r"
+	t.Whitespace = t.Space + t.OtherWhitespace
+
+	t.WhitespaceRe = regexp.MustCompile("[" + t.OtherWhitespace + "]")
+	t.SentenceEndingRe = regexp.MustCompile("([^" + t.Whitespace + "]" +
+		"[.!?]['\"]?) [ ]*")
+	t.ChunksHyphenRe = regexp.MustCompile("(\u2014|[^" + t.Whitespace +
+		"]+-|" + "[^" + t.Whitespace + "]+|[" + t.Whitespace + "]+)")
+	t.ChunksNoHyphenRe = regexp.MustCompile("(\u2014|[^" + t.Whitespace +
+		"]+|" + "[" + t.Whitespace + "]+)")
+	t.ConsWhitespaceRe = regexp.MustCompile("[" + t.Whitespace + "]+")
+
 	return t
+}
+
+func (t *TextWrapper) strip(s string) string {
+	return strings.Trim(s, t.Whitespace)
+}
+
+func (t *TextWrapper) lStrip(s string) string {
+	return strings.TrimLeft(s, t.Whitespace)
 }
 
 // Wrap splits text into lines of specified length.  The TextWrapper
@@ -186,7 +185,7 @@ func (t *TextWrapper) Wrap(text string) []string {
 			indent = t.InitialIndent
 		}
 
-		if len(indent)+len(Lstrip(t.Placeholder)) > t.Width {
+		if len(indent)+len(t.lStrip(t.Placeholder)) > t.Width {
 			panic("Placeholder is too wide to fit on indented line.")
 		}
 	}
@@ -196,33 +195,35 @@ func (t *TextWrapper) Wrap(text string) []string {
 
 	// expands tabs if ExpandTabs is true
 	if t.ExpandTabs {
-		tabString := strings.Repeat(Space, t.TabSize)
-		text = strings.Replace(text, Tab, tabString, -1)
+		tabString := strings.Repeat(t.Space, t.TabSize)
+		text = strings.Replace(text, t.Tab, tabString, -1)
 	}
 
 	// replaces whitespace if ReplaceWhitespace is true
 	if t.ReplaceWhitespace {
-		text = WhitespaceRe.ReplaceAllString(text, Space)
+		text = t.WhitespaceRe.ReplaceAllString(text, t.Space)
 	}
 
 	// attempts to fix sentence endings if FixSentenceEndings is true
 	if t.FixSentenceEndings {
-		text = SentenceEndingRe.ReplaceAllString(text, "${1}"+Space+Space)
+		text = t.SentenceEndingRe.ReplaceAllString(text,
+			"${1}"+t.Space+t.Space)
 	}
 
 	// breaks text into chunks depending on BreakOnHyphens
 	var chunks []string
 	if t.BreakOnHyphens {
-		chunks = ChunksHyphenRe.FindAllString(text, -1)
+		chunks = t.ChunksHyphenRe.FindAllString(text, -1)
 	} else {
-		chunks = ChunksNoHyphenRe.FindAllString(text, -1)
+		chunks = t.ChunksNoHyphenRe.FindAllString(text, -1)
 	}
 
 	// iterates through lines
 	var lines []string
 	for i := 0; i < len(chunks); i++ {
 		// drops leading whitespace if DropWhitespace is true
-		if len(lines) > 0 && t.DropWhitespace && Strip(chunks[i]) == "" {
+		if len(lines) > 0 && t.DropWhitespace &&
+			t.strip(chunks[i]) == "" {
 			i++
 		}
 
@@ -278,7 +279,7 @@ func (t *TextWrapper) Wrap(text string) []string {
 
 		// if DropWhitespace is true, drops any trailing whitespace
 		if last := len(curLine) - 1; t.DropWhitespace &&
-			curLen > 0 && Strip(curLine[last]) == "" {
+			curLen > 0 && t.strip(curLine[last]) == "" {
 			curLen -= len([]rune(curLine[last]))
 			curLine = curLine[:last]
 		}
@@ -290,7 +291,7 @@ func (t *TextWrapper) Wrap(text string) []string {
 			// if the line is empty, removes any leading whitespace
 			// from the placeholder
 			if curLen == 0 {
-				curLine = append(curLine, Lstrip(t.Placeholder))
+				curLine = append(curLine, t.lStrip(t.Placeholder))
 			} else {
 				curLine = append(curLine, t.Placeholder)
 			}
@@ -311,5 +312,5 @@ func (t *TextWrapper) Wrap(text string) []string {
 // fields that can be modified to control Wrap's behavior.  See
 // TextWrapper for descriptions of the fields.
 func (t *TextWrapper) Fill(text string) string {
-	return strings.Join(t.Wrap(text), Newline)
+	return strings.Join(t.Wrap(text), t.Newline)
 }

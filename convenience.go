@@ -1,6 +1,9 @@
 package textwrap
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 // Wrap is a convenience function corresponding to TextWrapper.Wrap.
 // It accepts all of the same options as a TextWrapper.  As each
@@ -29,7 +32,7 @@ func Shorten(text string, opts ...option) string {
 	t := NewTextWrapper(opts...)
 	t.MaxLines = 1
 
-	text = ConsWhitespaceRe.ReplaceAllString(text, Space)
+	text = t.ConsWhitespaceRe.ReplaceAllString(text, t.Space)
 
 	return t.Fill(text)
 }
@@ -38,15 +41,16 @@ func Shorten(text string, opts ...option) string {
 // by all lines--from each line of text.  Lines consisting entirely
 // of whitespace are ignored.
 func Dedent(text string) string {
-	lines := strings.Split(text, Newline)
+	lines := strings.Split(text, "\n")
 	var indent string
 
+	re := regexp.MustCompile("^[ \t\n\v\f\r]*")
 	start := true
 	for i, line := range lines {
-		if Strip(line) == "" {
+		if strings.Trim(line, " \t\n\v\f\r") == "" {
 			lines[i] = ""
 		} else if start {
-			indent, start = LeadWhitespaceRe.FindString(line), false
+			indent, start = re.FindString(line), false
 		} else if len(indent) != 0 {
 			s, t := []rune(indent), []rune(line)
 			var j int
@@ -62,16 +66,16 @@ func Dedent(text string) string {
 		lines[i] = strings.TrimPrefix(lines[i], indent)
 	}
 
-	return strings.Join(lines, Newline)
+	return strings.Join(lines, "\n")
 }
 
 // Indent prepends pref to lines within text.  Lines consisting only
 // of whitespace are ignored.  If pred is nil, each line is indented;
 // otherwise, only lines for which pred(line) == true are indented.
 func Indent(text, pref string, pred func(string) bool) string {
-	lines := strings.Split(text, Newline)
+	lines := strings.Split(text, "\n")
 	for i, line := range lines {
-		if Strip(line) == "" {
+		if strings.Trim(line, " \t\n\v\f\r") == "" {
 			continue
 		}
 
@@ -80,5 +84,5 @@ func Indent(text, pref string, pred func(string) bool) string {
 		}
 	}
 
-	return strings.Join(lines, Newline)
+	return strings.Join(lines, "\n")
 }
