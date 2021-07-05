@@ -19,5 +19,6 @@ but will otherwise use the default behavior for a TextWrapper.
 A Textwrapper also contains values defining whitespace and regular
 expressions used in the wrapping functions.  These fields are
 exported to allow users to customize the functions for non-Latin
-character sets.  No options are provided for them because I cannot
-guarantee that any changes will produce results that make sense.
+character sets.  Even so, there are no optional arguments
+corresponding to those values because I cannot guarantee that any 
+changes will produce results that make sense.
